@@ -24,7 +24,7 @@ node_groups = {
 }
 
 # Monitoring Stack Configuration
-grafana_admin_password  = "YourSecurePassword123!" # CHANGE THIS
+grafana_admin_password  = "Admin123"
 prometheus_storage_size = "20Gi"
 grafana_storage_size    = "10Gi"
 
