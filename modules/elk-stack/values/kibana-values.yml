@@ -1,0 +1,41 @@
+# Kibana Values
+elasticsearchHosts: "http://elasticsearch-master:9200"
+
+replicas: 1
+
+resources:
+  requests:
+    cpu: "250m"
+    memory: "1Gi"
+  limits:
+    cpu: "500m"
+    memory: "2Gi"
+
+service:
+  type: ClusterIP
+  port: 5601
+
+healthCheckPath: "/app/kibana"
+
+kibanaConfig:
+  kibana.yml: |
+    server.host: "0.0.0.0"
+    elasticsearch.hosts: ["http://elasticsearch-master:9200"]
+    monitoring.ui.container.elasticsearch.enabled: true
+
+extraEnvs:
+  - name: "NODE_OPTIONS"
+    value: "--max-old-space-size=1800"
+
+lifecycle:
+  postStart:
+    exec:
+      command:
+        - bash
+        - -c
+        - |
+          #!/bin/bash
+          # Wait for Kibana to start
+          while ! curl -s http://localhost:5601/api/status | grep -q '"overall":{"level":"available"}'; do
+            sleep 5
+          done
