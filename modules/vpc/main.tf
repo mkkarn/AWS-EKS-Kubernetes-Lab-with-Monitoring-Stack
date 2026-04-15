@@ -1,92 +1,54 @@
-locals {
-  azs = slice(data.aws_availability_zones.available.names, 0, var.az_count)
-  tags = merge(var.tags, { "kubernetes.io/cluster/${var.cluster_name}" = "shared" })
+################################################################################
+# VPC Module Variables
+################################################################################
+
+variable "cluster_name" {
+  description = "Name of the EKS cluster"
+  type        = string
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-  filter { name = "opt-in-status", values = ["opt-in-not-required"] }
-}
+variable "vpc_cidr" {
+  description = "CIDR block for the VPC"
+  type        = string
+  default     = "10.0.0.0/16"
 
-resource "aws_vpc" "this" {
-  cidr_block           = var.vpc_cidr
-  enable_dns_hostnames = true
-  enable_dns_support   = true
-  tags                 = merge(local.tags, { Name = "${var.cluster_name}-vpc" })
-}
-
-resource "aws_internet_gateway" "this" {
-  vpc_id = aws_vpc.this.id
-  tags   = merge(local.tags, { Name = "${var.cluster_name}-igw" })
-}
-
-resource "aws_subnet" "public" {
-  count                   = length(local.azs)
-  vpc_id                  = aws_vpc.this.id
-  cidr_block              = cidrsubnet(var.vpc_cidr, 4, count.index)
-  availability_zone       = local.azs[count.index]
-  map_public_ip_on_launch = true
-  tags = merge(local.tags, {
-    Name                                        = "${var.cluster_name}-public-${local.azs[count.index]}"
-    "kubernetes.io/role/elb"                    = "1"
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-  })
-}
-
-resource "aws_subnet" "private" {
-  count             = length(local.azs)
-  vpc_id            = aws_vpc.this.id
-  cidr_block        = cidrsubnet(var.vpc_cidr, 4, count.index + length(local.azs))
-  availability_zone = local.azs[count.index]
-  tags = merge(local.tags, {
-    Name                                          = "${var.cluster_name}-private-${local.azs[count.index]}"
-    "kubernetes.io/role/internal-elb"             = "1"
-    "kubernetes.io/cluster/${var.cluster_name}"   = "shared"
-  })
-}
-
-resource "aws_eip" "nat" {
-  count  = 1
-  domain = "vpc"
-  tags   = merge(local.tags, { Name = "${var.cluster_name}-nat-eip" })
-  depends_on = [aws_internet_gateway.this]
-}
-
-resource "aws_nat_gateway" "this" {
-  count         = 1
-  allocation_id = aws_eip.nat[0].id
-  subnet_id     = aws_subnet.public[0].id
-  tags          = merge(local.tags, { Name = "${var.cluster_name}-nat" })
-  depends_on    = [aws_internet_gateway.this]
-}
-
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.this.id
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.this.id
+  validation {
+    condition     = can(cidrhost(var.vpc_cidr, 0))
+    error_message = "Must be a valid IPv4 CIDR block."
   }
-  tags = merge(local.tags, { Name = "${var.cluster_name}-public-rt" })
 }
 
-resource "aws_route_table_association" "public" {
-  count          = length(local.azs)
-  subnet_id      = aws_subnet.public[count.index].id
-  route_table_id = aws_route_table.public.id
-}
+variable "az_count" {
+  description = "Number of availability zones to use"
+  type        = number
+  default     = 2
 
-resource "aws_route_table" "private" {
-  count  = length(local.azs)
-  vpc_id = aws_vpc.this.id
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.this[0].id
+  validation {
+    condition     = var.az_count >= 2 && var.az_count <= 3
+    error_message = "AZ count must be between 2 and 3."
   }
-  tags = merge(local.tags, { Name = "${var.cluster_name}-private-rt-${count.index + 1}" })
 }
 
-resource "aws_route_table_association" "private" {
-  count          = length(local.azs)
-  subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = aws_route_table.private[count.index].id
+variable "single_nat_gateway" {
+  description = "Use a single NAT Gateway for all private subnets (cost optimization)"
+  type        = bool
+  default     = true
+}
+
+variable "enable_flow_logs" {
+  description = "Enable VPC Flow Logs"
+  type        = bool
+  default     = false
+}
+
+variable "flow_logs_retention_days" {
+  description = "Number of days to retain flow logs"
+  type        = number
+  default     = 7
+}
+
+variable "tags" {
+  description = "Tags to apply to all resources"
+  type        = map(string)
+  default     = {}
 }
