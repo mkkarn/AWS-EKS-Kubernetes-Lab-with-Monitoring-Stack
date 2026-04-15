@@ -1,0 +1,32 @@
+# AWS Configuration
+aws_region      = "ap-south-1" # Mumbai
+environment     = "dev"
+project_name    = "k8s-lab-m7i"
+
+# Network Configuration
+vpc_cidr        = "10.0.0.0/16"
+az_count        = 2
+
+# EKS Cluster Configuration
+cluster_version = "1.29"
+
+# Node Groups (Configured for m7i-flex.large)
+node_groups = {
+  general = {
+    instance_types = ["m7i-flex.large"]
+    desired_size   = 1
+    max_size       = 2
+    min_size       = 1
+    labels = {
+      "workload-type" = "general"
+    }
+  }
+}
+
+# Monitoring Stack Configuration
+grafana_admin_password  = "YourSecurePassword123!" # CHANGE THIS
+prometheus_storage_size = "20Gi"
+grafana_storage_size    = "10Gi"
+
+# ELK Stack Configuration
+elasticsearch_storage_size = "20Gi"
