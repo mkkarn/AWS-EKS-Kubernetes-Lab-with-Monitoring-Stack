@@ -1,0 +1,11 @@
+variable "namespace" {
+  description = "Kubernetes namespace for Argo CD"
+  type        = string
+  default     = "argocd"
+}
+
+variable "chart_version" {
+  description = "Version of Argo CD Helm chart"
+  type        = string
+  default     = "5.46.6"
+}
