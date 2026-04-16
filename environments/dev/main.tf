@@ -12,7 +12,7 @@ locals {
 }
 
 module "vpc" {
-  source = "../../modules/vpc"
+  source = "git::https://github.com/mkkarn/AWS-EKS-Kubernetes-Lab-with-Monitoring-Stack.git//modules/vpc?ref=main"
 
   cluster_name       = local.cluster_name
   vpc_cidr           = var.vpc_cidr
@@ -22,7 +22,7 @@ module "vpc" {
 }
 
 module "eks" {
-  source = "../../modules/eks"
+  source = "git::https://github.com/mkkarn/AWS-EKS-Kubernetes-Lab-with-Monitoring-Stack.git//modules/eks?ref=main"
 
   cluster_name    = local.cluster_name
   cluster_version = var.cluster_version
@@ -30,12 +30,11 @@ module "eks" {
   subnet_ids      = module.vpc.private_subnet_ids
 
   node_groups = var.node_groups
-
-  tags = local.tags
+  tags        = local.tags
 }
 
 module "ingress_controller" {
-  source = "../../modules/ingress-controller"
+  source = "git::https://github.com/mkkarn/AWS-EKS-Kubernetes-Lab-with-Monitoring-Stack.git//modules/ingress-controller?ref=main"
 
   namespace     = "ingress-nginx"
   replica_count = 1
@@ -44,7 +43,7 @@ module "ingress_controller" {
 }
 
 module "prometheus_grafana" {
-  source = "../../modules/prometheus-grafana"
+  source = "git::https://github.com/mkkarn/AWS-EKS-Kubernetes-Lab-with-Monitoring-Stack.git//modules/prometheus-grafana?ref=main"
 
   namespace               = "monitoring"
   environment             = var.environment
@@ -58,7 +57,7 @@ module "prometheus_grafana" {
 }
 
 module "elk_stack" {
-  source = "../../modules/elk-stack"
+  source = "git::https://github.com/mkkarn/AWS-EKS-Kubernetes-Lab-with-Monitoring-Stack.git//modules/elk-stack?ref=main"
 
   namespace                  = "logging"
   environment                = var.environment
@@ -70,9 +69,10 @@ module "elk_stack" {
 }
 
 module "argo_cd" {
-  source = "../../modules/argo-cd"
+  source = "git::https://github.com/mkkarn/AWS-EKS-Kubernetes-Lab-with-Monitoring-Stack.git//modules/argo-cd?ref=main"
 
   namespace = "argocd"
 
   depends_on = [module.eks]
 }
+
