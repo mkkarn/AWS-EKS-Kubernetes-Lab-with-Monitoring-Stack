@@ -36,7 +36,7 @@ resource "helm_release" "elasticsearch" {
   timeout = 900
 
   values = [
-    templatefile("${path.root}/modules/elk-stack/values/elasticsearch-values.yaml", {
+    templatefile("${path.module}/values/elasticsearch-values.yaml", {
       replicas           = var.elasticsearch_replicas
       storage_size       = var.elasticsearch_storage_size
       storage_class_name = var.storage_class_name
@@ -60,7 +60,7 @@ resource "helm_release" "kibana" {
 
   timeout = 600
 
-  values = [file("${path.root}/modules/elk-stack/values/kibana-values.yaml")]
+  values = [file("${path.module}/values/kibana-values.yaml")]
 
   depends_on = [helm_release.elasticsearch]
 }
@@ -78,7 +78,7 @@ resource "helm_release" "logstash" {
 
   timeout = 600
 
-  values = [file("${path.root}/modules/elk-stack/values/logstash-values.yaml")]
+  values = [file("${path.module}/values/logstash-values.yaml")]
 
   depends_on = [helm_release.elasticsearch]
 }
@@ -96,7 +96,8 @@ resource "helm_release" "filebeat" {
 
   timeout = 600
 
-  values = [file("${path.root}/modules/elk-stack/values/filebeat-values.yaml")]
+  values = [file("${path.module}/values/filebeat-values.yaml")]
 
   depends_on = [helm_release.elasticsearch]
 }
+
