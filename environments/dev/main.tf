@@ -32,24 +32,24 @@ module "ingress_controller" {
 }
 
 module "prometheus_grafana" {
-  source                 = "git::https://github.com/mkkarn/AWS-EKS-Kubernetes-Lab-with-Monitoring-Stack.git//modules/prometheus-grafana?ref=main"
-  namespace              = "monitoring"
-  environment            = var.environment
-  storage_class_name     = "gp3"
-  grafana_admin_password = var.grafana_admin_password
-  prometheus_retention   = "7d"
-  prometheus_storage_size= "30Gi"
-  grafana_storage_size   = "10Gi"
-  depends_on             = [module.eks]
+  source                  = "git::https://github.com/mkkarn/AWS-EKS-Kubernetes-Lab-with-Monitoring-Stack.git//modules/prometheus-grafana?ref=main"
+  namespace               = "monitoring"
+  environment             = var.environment
+  storage_class_name      = "gp3"
+  grafana_admin_password  = var.grafana_admin_password
+  prometheus_retention    = "7d"
+  prometheus_storage_size = "30Gi"
+  grafana_storage_size    = "10Gi"
+  depends_on              = [module.eks]
 }
 
 module "elk_stack" {
-  source                  = "git::https://github.com/mkkarn/AWS-EKS-Kubernetes-Lab-with-Monitoring-Stack.git//modules/elk-stack?ref=main"
-  namespace               = "logging"
-  environment             = var.environment
-  elasticsearch_replicas  = 2
+  source                     = "git::https://github.com/mkkarn/AWS-EKS-Kubernetes-Lab-with-Monitoring-Stack.git//modules/elk-stack?ref=main"
+  namespace                  = "logging"
+  environment                = var.environment
+  elasticsearch_replicas     = 2
   elasticsearch_storage_size = "100Gi"
-  storage_class_name      = "gp3"
-  depends_on              = [module.eks]
+  storage_class_name         = "gp3"
+  depends_on                 = [module.eks]
 }
 
